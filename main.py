@@ -16,8 +16,8 @@ import unittest
 
 
 #ch_exergy = pd.read_excel('ch_exergy.xls',index_col=0, header = 0, skiprows = 0 )
-H2O_liquid = pd.read_csv('water_l.dat',' ', header = 0, skiprows = 0 )
-H2O_liquid = H2O_liquid.set_index(['T K','p [Bar]'])
+H2O_complete = pd.read_csv('water_l.dat',' ', header = 0, skiprows = 0 )
+H2O_complete = H2O_complete.set_index(['T K','p [Bar]'])
 H2O_sat = pd.read_csv('H2O_sat.dat',' ', header = 0, skiprows = 0 )
 H2O_sat = H2O_sat.set_index(['T K','p [Bar]'])
 #tblR134a = pd.read_csv('R134a.dat',' ', header = 0, skiprows = 0 )
@@ -85,17 +85,19 @@ class State():
         return self.get_data_T_P()[self.param][0]
 
     def check_state(self):
-
         '''
         check state against saturated line
         '''
+
+
+
         pass
 
 
     def slope(self,rows,Prop,level):
 
         '''
-        get slope to intrerpolate by temperature
+        get slope to intrerpolate by defined property, level=0 temperature; level=1 pressure
         '''
         
         Prop_interp = (Prop - rows.index.get_level_values(level).unique()[0]) /  \
@@ -124,13 +126,13 @@ class State():
 
 # trying some values
 
-h1 = State(H2O_liquid,H2O_sat,297,1.51,0,'H saturated liquid [kJ/kg]')
+h1 = State(H2O_complete,H2O_sat,297,1.51,0,'H saturated liquid [kJ/kg]')
 h1.get_data_T_P()
 h1.select_property()
 print(h1,'\n')
 
 
-s1 = State(H2O_liquid,H2O_sat,297,1.51,0,'S saturated liquid [kJ/(kg K)]')
+s1 = State(H2O_complete,H2O_sat,297,1.51,0,'S saturated liquid [kJ/(kg K)]')
 s1.get_data_T_P()
 s1.select_property()
 print(s1,'\n')
@@ -147,7 +149,7 @@ class ThermoTest(unittest.TestCase):
     def test_Item_1(self):
         #self.s = State(df,T,P,x,param)
         x = 104.8
-        self.s = State(H2O_liquid,H2O_sat,273.15+25,1,0,'H saturated liquid [kJ/kg]')
+        self.s = State(H2O_complete,H2O_sat,273.15+25,1,0,'H saturated liquid [kJ/kg]')
         self.s.get_data_T_P()
         self.assertAlmostEqual(self.s.select_property(), x, delta=x*0.01)
 
@@ -155,7 +157,7 @@ class ThermoTest(unittest.TestCase):
     def test_Item_2(self):
         #self.s = State(df,T,P,x,param)
         x = 0.3673
-        self.s = State(H2O_liquid,H2O_sat,273.15+25,1,0,'S saturated liquid [kJ/(kg K)]')
+        self.s = State(H2O_complete,H2O_sat,273.15+25,1,0,'S saturated liquid [kJ/(kg K)]')
         self.s.get_data_T_P()
         self.assertAlmostEqual(self.s.select_property(), x, delta=x*0.01)
         #print('error = ', ((104.8-self.s.get_data_T_P()[0])) / \
@@ -165,7 +167,7 @@ class ThermoTest(unittest.TestCase):
     def test_Item_3(self):
         #self.s = State(df,T,P,x,param)
         x = 3583.167
-        self.s = State(H2O_liquid,H2O_sat,823,14,0,'H gas [kJ/kg]')
+        self.s = State(H2O_complete,H2O_sat,823,14,0,'H gas [kJ/kg]')
         self.s.get_data_T_P()
         self.assertAlmostEqual(self.s.select_property(), x, delta=x*0.01)
 
