@@ -56,8 +56,22 @@ class State():
                             (self.df.index.get_level_values(level=1) <= self.P+dP_sup)]
         return rows
 
+    def get_closest_rows_sat(self):
+
+            '''
+            input: df, thermodynamic table; 
+            output: df, 2 closest rows from target T 
+            '''
+
+            df1 =self.df_sat.loc[self.df_sat.index.get_level_values(level=0) < self.T]
+            df1 = df1[df1.index.get_level_values(level=0).max()==df1.index.get_level_values(level=0)]
+
+            df2 =self.df_sat.loc[self.df_sat.index.get_level_values(level=0) > self.T]
+            df2 = df2[df2.index.get_level_values(level=0).min()==df2.index.get_level_values(level=0)]
+
+            return df1.append(df2)
         
-    def get_data_T_P(self):
+    def get_data_T(self):
 
         '''
         input: df, thermodynamic table; 
@@ -72,26 +86,59 @@ class State():
         max_value_T = self.max_value(rows,level=0)
         output = self.interpolation(min_value_T,max_value_T,slope)
         output = output.set_index(['T K','p [Bar]'])
+        return output
+
+    def get_data_P(self):
 
         # interpolation by pressure over the interpolation by temperature
+        output = self.get_data_T()
         slope = self.slope(output,self.P,level=1)
         min_value_P = self.min_value(output,level=1)
         max_value_P = self.max_value(output,level=1)
         output = self.interpolation(min_value_P,max_value_P,slope)
         output = output.set_index(['T K','p [Bar]'])
         return output
+    
+
 
     def select_property(self):
-        return self.get_data_T_P()[self.param][0]
+        return self.get_data_P()[self.param][0]
+
+    def interpol_sat(self):
+        '''
+        input: df, thermodynamic table; 
+        output: df, properties at defined T and P
+        '''
+
+        rows = self.get_closest_rows_sat()
+
+        # interpolate by temperature
+        slope = self.slope(rows,self.T,level=0)
+        min_value_T = self.min_value(rows,level=0)
+        max_value_T = self.max_value(rows,level=0)
+        output = self.interpolation(min_value_T,max_value_T,slope)
+        output = output.set_index(['T K','p [Bar]'])
+        return output
+
 
     def check_state(self):
         '''
         check state against saturated line
         '''
+        self.P_sat = self.interpol_sat().reset_index()['p [Bar]']
+        print("--->", self.P_sat)
+        if float(self.P) > float(self.P_sat):
+            print("The state condition is subcooled liquid")
+            self.state = 0
+        elif float(self.P) < float(self.P_sat):
+            print("The state condition is superheated")
+            self.state = 1
+        else:
+            print("The state condition is saturated")
+            self.state = 2
+        return self.P_sat
 
 
-
-        pass
 
 
     def slope(self,rows,Prop,level):
@@ -127,18 +174,23 @@ class State():
 # trying some values
 
 h1 = State(H2O_complete,H2O_sat,297,1.51,0,'H saturated liquid [kJ/kg]')
-h1.get_data_T_P()
 h1.select_property()
+
 print(h1,'\n')
 
+sat = State(H2O_complete,H2O_sat,297,1.51,0,'H saturated liquid [kJ/kg]')
+print(sat.interpol_sat())
+print(sat.check_state())
+
+h2 = State(H2O_complete,H2O_sat,297,1.51,0,'H saturated liquid [kJ/kg]')
+#print('***',h2.get_closest_rows_sat(),'\n')
 
 s1 = State(H2O_complete,H2O_sat,297,1.51,0,'S saturated liquid [kJ/(kg K)]')
-s1.get_data_T_P()
 s1.select_property()
 print(s1,'\n')
 
 
-print(H2O_sat)
+#print(H2O_sat)
 
 # ---------------------------
 #           tests
@@ -150,7 +202,8 @@ class ThermoTest(unittest.TestCase):
         #self.s = State(df,T,P,x,param)
         x = 104.8
         self.s = State(H2O_complete,H2O_sat,273.15+25,1,0,'H saturated liquid [kJ/kg]')
-        self.s.get_data_T_P()
+        self.s.get_data_T()
+        self.s.get_data_P()
         self.assertAlmostEqual(self.s.select_property(), x, delta=x*0.01)
 
     # entropy sasturated water
@@ -158,7 +211,8 @@ class ThermoTest(unittest.TestCase):
         #self.s = State(df,T,P,x,param)
         x = 0.3673
         self.s = State(H2O_complete,H2O_sat,273.15+25,1,0,'S saturated liquid [kJ/(kg K)]')
-        self.s.get_data_T_P()
+        self.s.get_data_T()
+        self.s.get_data_P()
         self.assertAlmostEqual(self.s.select_property(), x, delta=x*0.01)
         #print('error = ', ((104.8-self.s.get_data_T_P()[0])) / \
         #    self.s.get_data_T_P()[0] )
@@ -168,7 +222,8 @@ class ThermoTest(unittest.TestCase):
         #self.s = State(df,T,P,x,param)
         x = 3583.167
         self.s = State(H2O_complete,H2O_sat,823,14,0,'H gas [kJ/kg]')
-        self.s.get_data_T_P()
+        self.s.get_data_T()
+        self.s.get_data_P()
         self.assertAlmostEqual(self.s.select_property(), x, delta=x*0.01)
 
 if __name__ == "__main__":
