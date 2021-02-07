@@ -30,14 +30,12 @@ H2O_sat = H2O_sat.set_index(['T K','p [Bar]'])
 
 
 class State():
-    def __init__(self,df,df_sat,T,P,x,param):
+    def __init__(self,df,df_sat,T,P,x):
         self.T = T
         self.P = P
         self.x = x
         self.df = df
         self.df_sat = df_sat
-        self.param = param
-
    
     def saturation_check_state(self):
         '''
@@ -181,7 +179,7 @@ class State():
 #s.main_get_properties()
 
 
-t = State(H2O_complete,H2O_sat,297,1.51,0,'H saturated liquid [kJ/kg]')
+t = State(H2O_complete,H2O_sat,297,1.51,0)
 t.saturation_check_state()
 get_closest_rows = t.get_closest_rows()
 get_property_data = t.get_property_data(get_closest_rows,level=0)
@@ -209,7 +207,7 @@ print(get_data_P.T)
 class ThermoTest(unittest.TestCase):
     # enthalpy sub-cooled  water
     def test_Item_1(self):
-        #self.s = State(df,T,P,x,param)
+        #self.s = State(df,T,P,x)
         x = 104.8
         self.s = State(H2O_complete,H2O_sat,273.15+25,1,0,'H saturated liquid [kJ/kg]')
         self.s.get_property_data()
@@ -218,7 +216,7 @@ class ThermoTest(unittest.TestCase):
 
     # entropy sasturated water
     def test_Item_2(self):
-        #self.s = State(df,T,P,x,param)
+        #self.s = State(df,T,P,x)
         x = 0.3673
         self.s = State(H2O_complete,H2O_sat,273.15+25,1,0,'S saturated liquid [kJ/(kg K)]')
         self.s.get_property_data()
@@ -229,7 +227,7 @@ class ThermoTest(unittest.TestCase):
 
     # enthalpy superheated  water
     def test_Item_3(self):
-        #self.s = State(df,T,P,x,param)
+        #self.s = State(df,T,P,x)
         x = 3583.167
         self.s = State(H2O_complete,H2O_sat,823,14,0,'H gas [kJ/kg]')
         self.s.get_property_data()
