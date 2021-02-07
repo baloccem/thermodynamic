@@ -45,10 +45,10 @@ class Properties():
         if self.T <= 647.29:
             self.P_sat = self.saturation_data().reset_index()['p [Bar]'][0]
 
-            if float(self.P) > float(self.P_sat):
+            if round(self.P,2) > round(self.P_sat,2):
                 #print("At current P of:", self.P, " bar the state condition is subcooled liquid")
                 self.state = 0
-            elif float(self.P) < float(self.P_sat):
+            elif round(self.P,2) < round(self.P_sat,2):
                 #print("At current P of:", self.P, " bar the state condition is superheated")
                 self.state = 1
             else:
@@ -216,7 +216,7 @@ print(p2)
 # saturated condition
 p3 = Properties(H2O_complete,H2O_sat,351.15,0.4368,0.6)
 p3.main_get_properties()
-print(p2)
+print(p3)
 
 
 
